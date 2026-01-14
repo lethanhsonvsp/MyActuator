@@ -1,15 +1,22 @@
-﻿@page "/"
+﻿@page "/motor-control"
 @using MudBlazor
 @using MyActuator.Services
+@using System.Threading.Tasks
 @inject MotorControlService MotorService
 @implements IDisposable
-@rendermode InteractiveAuto
+@rendermode InteractiveServer
 
 <MudThemeProvider IsDarkMode="true" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h3" GutterBottom="true" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2" />
+        MYACTUATOR Motor Control
+    </MudText>
+
+    <!-- CONNECTION PANEL -->
     <MudPaper Elevation="3" Class="pa-4 mb-4">
         <MudGrid>
             <MudItem xs="12" sm="4">
@@ -137,7 +144,7 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Success"
                            StartIcon="@Icons.Material.Filled.Send"
-                           OnClick="@(() => MotorService.SendTorqueCommand())"
+                           OnClick="@(() => MotorService.SendTorqueCommandAsync())"
                            Disabled="!MotorService.IsConnected"
                            FullWidth="true">
                     Send Torque
@@ -173,7 +180,7 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Warning"
                            StartIcon="@Icons.Material.Filled.Send"
-                           OnClick="@(() => MotorService.SendVelocityCommand())"
+                           OnClick="@(() => MotorService.SendVelocityCommandAsync())"
                            Disabled="!MotorService.IsConnected"
                            FullWidth="true">
                     Send Velocity
@@ -210,7 +217,7 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Secondary"
                            StartIcon="@Icons.Material.Filled.Send"
-                           OnClick="@(() => MotorService.SendPositionCommand())"
+                           OnClick="@(() => MotorService.SendPositionCommandAsync())"
                            Disabled="!MotorService.IsConnected"
                            FullWidth="true">
                     Send Position
@@ -231,7 +238,7 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Warning"
                            StartIcon="@Icons.Material.Filled.Stop"
-                           OnClick="@(() => MotorService.StopMotor())"
+                           OnClick="@(() => MotorService.StopMotorAsync())"
                            Disabled="!MotorService.IsConnected"
                            FullWidth="true"
                            Size="Size.Large">
@@ -242,7 +249,7 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Error"
                            StartIcon="@Icons.Material.Filled.PowerSettingsNew"
-                           OnClick="@(() => MotorService.ShutdownMotor())"
+                           OnClick="@(() => MotorService.ShutdownMotorAsync())"
                            Disabled="!MotorService.IsConnected"
                            FullWidth="true"
                            Size="Size.Large">
@@ -253,7 +260,7 @@
                 <MudButton Variant="Variant.Outlined"
                            Color="Color.Info"
                            StartIcon="@Icons.Material.Filled.RestartAlt"
-                           OnClick="@(() => MotorService.ResetMotor())"
+                           OnClick="@(() => MotorService.ResetMotorAsync())"
                            Disabled="!MotorService.IsConnected"
                            FullWidth="true"
                            Size="Size.Large">
@@ -285,7 +292,12 @@
 
     protected override void OnInitialized()
     {
-        MotorService.OnStateChanged += StateHasChanged;
+        MotorService.OnStateChanged += OnMotorServiceStateChanged;
+    }
+
+    private Task OnMotorServiceStateChanged()
+    {
+        return InvokeAsync(StateHasChanged);
     }
 
     private async Task Connect()
@@ -293,9 +305,9 @@
         await MotorService.ConnectAsync(_canInterface, _motorId);
     }
 
-    private void Disconnect()
+    private async Task Disconnect()
     {
-        MotorService.Disconnect();
+        await MotorService.DisconnectAsync();
     }
 
     private Severity GetConnectionSeverity()
@@ -310,6 +322,6 @@
 
     public void Dispose()
     {
-        MotorService.OnStateChanged -= StateHasChanged;
+        MotorService.OnStateChanged -= OnMotorServiceStateChanged;
     }
 }

@@ -1,4 +1,11 @@
-﻿namespace MyActuator.Services;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace MyActuator.Services;
 
 
 // ==================== MOTOR CONTROLLER ====================
@@ -295,6 +302,7 @@ public class MotorControlService
 {
     private MotorController? _motor;
     private Timer? _statusTimer;
+    private readonly SemaphoreSlim _lock = new(1, 1);
 
     // Properties - dùng auto-property cho Blazor
     public string ConnectionStatus { get; private set; } = "Disconnected";
@@ -313,100 +321,109 @@ public class MotorControlService
 
     public List<string> Logs { get; } = new();
 
-    // Event để trigger UI refresh trong Blazor
-    public event Action? OnStateChanged;
+    // Event để trigger UI refresh trong Blazor (async-safe)
+    public event Func<Task>? OnStateChanged;
 
     // ================= CONNECTION =================
 
     public async Task ConnectAsync(string canInterface, byte motorId)
     {
-        await Task.Run(() =>
+        await _lock.WaitAsync();
+        try
         {
-            try
+            _motor = new MotorController(canInterface, motorId);
+
+            if (_motor.IsConnected)
             {
-                _motor = new MotorController(canInterface, motorId);
+                _motor.OnStatusUpdate += HandleStatusUpdate;
+                _motor.OnError += HandleError;
 
-                if (_motor.IsConnected)
+                ConnectionStatus = $"Connected to Motor ID {motorId}";
+                AddLog($"✓ Connected to {canInterface}, Motor ID {motorId}");
+
+                // Start periodic status reading (every 100ms)
+                _statusTimer = new Timer(async _ =>
                 {
-                    _motor.OnStatusUpdate += HandleStatusUpdate;
-                    _motor.OnError += HandleError;
-
-                    ConnectionStatus = $"Connected to Motor ID {motorId}";
-                    AddLog($"✓ Connected to {canInterface}, Motor ID {motorId}");
-
-                    // Start periodic status reading (every 100ms)
-                    _statusTimer = new Timer(_ =>
-                    {
-                        _motor.ReadMotorStatus();
-                    }, null, 0, 100);
-                }
-                else
-                {
-                    ConnectionStatus = "Connection Failed";
-                    AddLog($"✗ Failed to connect to {canInterface}");
-                }
+                    _motor?.ReadMotorStatus();
+                }, null, 0, 100);
             }
-            catch (Exception ex)
+            else
             {
-                ConnectionStatus = "Error";
-                AddLog($"✗ Error: {ex.Message}");
+                ConnectionStatus = "Connection Failed";
+                AddLog($"✗ Failed to connect to {canInterface}");
             }
-
-            NotifyStateChanged();
-        });
+        }
+        catch (Exception ex)
+        {
+            ConnectionStatus = "Error";
+            AddLog($"✗ Error: {ex.Message}");
+        }
+        finally
+        {
+            _lock.Release();
+            await NotifyStateChangedAsync();
+        }
     }
 
-    public void Disconnect()
+    public async Task DisconnectAsync()
     {
-        _statusTimer?.Dispose();
-        _motor?.Stop();
-        ConnectionStatus = "Disconnected";
-        AddLog("Disconnected");
-        NotifyStateChanged();
+        await _lock.WaitAsync();
+        try
+        {
+            _statusTimer?.Dispose();
+            _motor?.Stop();
+            ConnectionStatus = "Disconnected";
+            AddLog("Disconnected");
+        }
+        finally
+        {
+            _lock.Release();
+            await NotifyStateChangedAsync();
+        }
     }
 
     // ================= CONTROL COMMANDS =================
 
-    public void SendTorqueCommand()
+    public async Task SendTorqueCommandAsync()
     {
         _motor?.SetTorque(TargetTorque);
         AddLog($"→ Set Torque: {TargetTorque:F2} A");
-        NotifyStateChanged();
+        await NotifyStateChangedAsync();
     }
 
-    public void SendVelocityCommand()
+    public async Task SendVelocityCommandAsync()
     {
         _motor?.SetVelocity(TargetSpeed);
         AddLog($"→ Set Velocity: {TargetSpeed} dps");
-        NotifyStateChanged();
+        await NotifyStateChangedAsync();
     }
 
-    public void SendPositionCommand()
+    public async Task SendPositionCommandAsync()
     {
         _motor?.SetPosition(TargetAngle, MaxSpeed);
         AddLog($"→ Set Position: {TargetAngle:F2}° @ {MaxSpeed} dps");
-        NotifyStateChanged();
+        await NotifyStateChangedAsync();
     }
 
-    public void StopMotor()
+    public async Task StopMotorAsync()
     {
         _motor?.StopMotor();
         AddLog("→ Motor Stopped");
-        NotifyStateChanged();
+        await NotifyStateChangedAsync();
     }
 
-    public void ShutdownMotor()
+    public async Task ShutdownMotorAsync()
     {
         _motor?.ShutdownMotor();
         AddLog("→ Motor Shutdown");
-        NotifyStateChanged();
+        await NotifyStateChangedAsync();
     }
 
-    public void ResetMotor()
+    public async Task ResetMotorAsync()
     {
         _motor?.ResetSystem();
         AddLog("→ System Reset");
-        NotifyStateChanged();
+        await NotifyStateChangedAsync();
     }
 
     // ================= EVENT HANDLERS =================
@@ -417,14 +434,14 @@ public class MotorControlService
         TorqueCurrent = status.TorqueCurrent;
         Speed = status.Speed;
         Angle = status.Angle;
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync(); // Fire and forget
     }
 
     private void HandleError(string error)
     {
         ErrorMessage = error;
         AddLog($"⚠ {error}");
-        NotifyStateChanged();
+        _ = NotifyStateChangedAsync(); // Fire and forget
     }
 
     private void AddLog(string message)
@@ -437,5 +454,11 @@ public class MotorControlService
             Logs.RemoveAt(0);
     }
 
-    private void NotifyStateChanged() => OnStateChanged?.Invoke();
+    private async Task NotifyStateChangedAsync()
+    {
+        if (OnStateChanged != null)
+        {
+            await OnStateChanged.Invoke();
+        }
+    }
 }
