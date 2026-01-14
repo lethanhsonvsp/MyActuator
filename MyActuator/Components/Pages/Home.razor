@@ -111,6 +111,43 @@
 
     <!-- CONTROL PANELS -->
     <MudGrid>
+        <MudItem xs="12">
+            <MudPaper Elevation="3" Class="pa-4 mt-4">
+                <MudText Typo="Typo.h6">
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-2" />
+                    Acceleration / Deceleration
+                </MudText>
+
+                <MudGrid Class="mt-2">
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="MotorService.PositionAcc"
+                                         Label="Position Acc (dps/s)"
+                                         Min="100" Max="60000"
+                                         Variant="Variant.Outlined"
+                                         T="uint"
+                                         FullWidth="true" />
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="MotorService.PositionDec"
+                                         Label="Position Dec (dps/s)"
+                                         Min="100" Max="60000"
+                                         Variant="Variant.Outlined"
+                                         T="uint"
+                                         FullWidth="true" />
+                    </MudItem>
+                </MudGrid>
+
+                <MudButton Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           Class="mt-3"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="@MotorService.ApplyPositionAccDecAsync"
+                           Disabled="!MotorService.IsConnected">
+                    Apply Acc / Dec
+                </MudButton>
+            </MudPaper>
+        </MudItem>
         <!-- TORQUE CONTROL -->
         <MudItem xs="12" md="4">
             <MudPaper Elevation="3" Class="pa-4" Style="height: 100%;">

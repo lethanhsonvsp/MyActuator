@@ -85,6 +85,24 @@ public class MotorController
                 break;
         }
     }
+    /// <summary>
+    /// Set acceleration / deceleration (0x43)
+    /// </summary>
+    /// <param name="index">
+    /// 0x00: Pos Acc
+    /// 0x01: Pos Dec
+    /// 0x02: Speed Acc
+    /// 0x03: Speed Dec
+    /// </param>
+    /// <param name="value">dps/s (100–60000)</param>
+    public void SetAcceleration(byte index, uint value)
+    {
+        byte[] data = new byte[7];
+        data[0] = index;
+        Array.Copy(BitConverter.GetBytes(value), 0, data, 3, 4);
+
+        SendCommand(0x43, data);
+    }
 
     private void ParseStatus2(byte[] data)
     {
@@ -317,13 +335,14 @@ public class MotorControlService
     public float TargetTorque { get; set; }
     public int TargetSpeed { get; set; } = 100;
     public float TargetAngle { get; set; }
-    public ushort MaxSpeed { get; set; } = 500;
+    public ushort MaxSpeed { get; set; } = 1000;
 
     public List<string> Logs { get; } = new();
 
     // Event để trigger UI refresh trong Blazor (async-safe)
     public event Func<Task>? OnStateChanged;
-
+    public uint PositionAcc { get; set; } = 10000;
+    public uint PositionDec { get; set; } = 10000;
     // auto
     // ===== AUTO LOOP CONFIG =====
     public float AutoAngle { get; set; } = 10f;   // ±X độ
@@ -467,6 +486,17 @@ public class MotorControlService
     {
         _motor?.SetPosition(TargetAngle, MaxSpeed);
         AddLog($"→ Set Position: {TargetAngle:F2}° @ {MaxSpeed} dps");
+        await NotifyStateChangedAsync();
+    }
+    // ===== ACC / DEC =====
+
+
+    public async Task ApplyPositionAccDecAsync()
+    {
+        _motor?.SetAcceleration(0x00, PositionAcc);
+        _motor?.SetAcceleration(0x01, PositionDec);
+
+        AddLog($"→ Set Pos Acc={PositionAcc} dps/s, Dec={PositionDec} dps/s");
         await NotifyStateChangedAsync();
     }
 
