@@ -168,10 +168,10 @@ public class SocketCan
 
         Array.Copy(data, frame.data, data.Length);
         // data frame is always 8 bytes in size
-        Console.WriteLine(
-            $"➡ Sending CAN Frame: ID=0x{frame.can_id:X3} " +
-            $"DLC={frame.can_dlc} Data={BitConverter.ToString(data)}"
-        );
+        // Console.WriteLine(
+        //     $"➡ Sending CAN Frame: ID=0x{frame.can_id:X3} " +
+        //     $"DLC={frame.can_dlc} Data={BitConverter.ToString(data)}"
+        // );
         int size = Marshal.SizeOf<can_frame>();
         byte[] buffer = StructToBytes(frame);
 
