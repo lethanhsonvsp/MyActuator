@@ -11,10 +11,6 @@
 <MudSnackbarProvider />
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudText Typo="Typo.h3" GutterBottom="true" Class="mb-4">
-        <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2" />
-        MYACTUATOR Motor Control
-    </MudText>
 
     <!-- CONNECTION PANEL -->
     <MudPaper Elevation="3" Class="pa-4 mb-4">
@@ -225,6 +221,70 @@
             </MudPaper>
         </MudItem>
     </MudGrid>
+    <!-- AUTO LOOP CONTROL -->
+    <MudPaper Elevation="3" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            <MudIcon Icon="@Icons.Material.Filled.Loop" Class="mr-2" Color="Color.Info" />
+            Auto Position Loop
+        </MudText>
+
+        <MudGrid>
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="MotorService.AutoAngle"
+                                 Label="Angle ±X (deg)"
+                                 Min="1" Max="360"
+                                 Variant="Variant.Outlined"
+                                 T="float" />
+            </MudItem>
+
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="MotorService.AutoLoops"
+                                 Label="Loops (N)"
+                                 Min="1" Max="100"
+                                 Variant="Variant.Outlined"
+                                 T="int" />
+            </MudItem>
+
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="MotorService.AutoDelayMs"
+                                 Label="Delay (ms)"
+                                 Min="100" Max="5000"
+                                 Variant="Variant.Outlined"
+                                 T="int" />
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Class="mt-3">
+            <MudItem xs="6">
+                <MudButton Color="Color.Info"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           OnClick="@MotorService.StartAutoLoopAsync"
+                           Disabled="!MotorService.IsConnected || MotorService.IsAutoRunning"
+                           FullWidth="true">
+                    Start Auto Loop
+                </MudButton>
+            </MudItem>
+
+            <MudItem xs="6">
+                <MudButton Color="Color.Error"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Stop"
+                           OnClick="@MotorService.StopAutoLoopAsync"
+                           Disabled="!MotorService.IsAutoRunning"
+                           FullWidth="true">
+                    Stop Auto Loop
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+
+        @if (MotorService.IsAutoRunning)
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-3" Dense="true">
+                Auto loop is running…
+            </MudAlert>
+        }
+    </MudPaper>
 
     <!-- EMERGENCY CONTROLS -->
     <MudPaper Elevation="3" Class="pa-4 mt-4">

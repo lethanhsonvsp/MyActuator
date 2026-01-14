@@ -324,6 +324,71 @@ public class MotorControlService
     // Event để trigger UI refresh trong Blazor (async-safe)
     public event Func<Task>? OnStateChanged;
 
+    // auto
+    // ===== AUTO LOOP CONFIG =====
+    public float AutoAngle { get; set; } = 10f;   // ±X độ
+    public int AutoLoops { get; set; } = 20;       // N lần
+    public int AutoDelayMs { get; set; } = 800;   // delay giữa các bước
+
+    public bool IsAutoRunning { get; private set; }
+    private CancellationTokenSource? _autoCts;
+    public async Task StartAutoLoopAsync()
+    {
+        if (_motor == null || !_motor.IsConnected)
+            return;
+
+        if (IsAutoRunning)
+            return;
+
+        IsAutoRunning = true;
+        _autoCts = new CancellationTokenSource();
+        var ct = _autoCts.Token;
+
+        AddLog($"▶ Auto Loop START: ±{AutoAngle}°, Loops={AutoLoops}");
+
+        try
+        {
+            for (int i = 1; i <= AutoLoops; i++)
+            {
+                if (ct.IsCancellationRequested) break;
+
+                AddLog($"🔁 Loop {i}/{AutoLoops} → +{AutoAngle}°");
+                _motor.SetPosition(+AutoAngle, MaxSpeed);
+                await Task.Delay(AutoDelayMs, ct);
+
+                if (ct.IsCancellationRequested) break;
+
+                AddLog($"🔁 Loop {i}/{AutoLoops} → -{AutoAngle}°");
+                _motor.SetPosition(-AutoAngle, MaxSpeed);
+                await Task.Delay(AutoDelayMs, ct);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            AddLog("⏹ Auto Loop CANCELLED");
+        }
+        finally
+        {
+            IsAutoRunning = false;
+            AddLog("■ Auto Loop FINISHED");
+            await NotifyStateChangedAsync();
+        }
+    }
+
+    public async Task StopAutoLoopAsync()
+    {
+        if (!IsAutoRunning)
+            return;
+
+        _autoCts?.Cancel();
+        IsAutoRunning = false;
+
+        _motor?.StopMotor();
+        AddLog("⏹ Auto Loop STOPPED");
+
+        await NotifyStateChangedAsync();
+    }
+
     // ================= CONNECTION =================
 
     public async Task ConnectAsync(string canInterface, byte motorId)
