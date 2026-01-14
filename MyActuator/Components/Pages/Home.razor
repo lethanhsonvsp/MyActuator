@@ -1,0 +1,315 @@
+﻿@page "/"
+@using MudBlazor
+@using MyActuator.Services
+@inject MotorControlService MotorService
+@implements IDisposable
+@rendermode InteractiveAuto
+
+<MudThemeProvider IsDarkMode="true" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudPaper Elevation="3" Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" sm="4">
+                <MudTextField @bind-Value="_canInterface"
+                              Label="CAN Interface"
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Cable" />
+            </MudItem>
+            <MudItem xs="12" sm="3">
+                <MudNumericField @bind-Value="_motorId"
+                                 Label="Motor ID"
+                                 Variant="Variant.Outlined"
+                                 Min="1" Max="32"
+                                 Adornment="Adornment.Start"
+                                 AdornmentIcon="@Icons.Material.Filled.Tag"
+                                 T="byte" />
+            </MudItem>
+            <MudItem xs="12" sm="5" Class="d-flex align-center">
+                @if (!MotorService.IsConnected)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Link"
+                               OnClick="Connect"
+                               FullWidth="true">
+                        Connect
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.LinkOff"
+                               OnClick="Disconnect"
+                               FullWidth="true">
+                        Disconnect
+                    </MudButton>
+                }
+            </MudItem>
+        </MudGrid>
+
+        <MudAlert Severity="@GetConnectionSeverity()" Class="mt-3" Dense="true">
+            @MotorService.ConnectionStatus
+        </MudAlert>
+
+        @if (!string.IsNullOrEmpty(MotorService.ErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-2" Dense="true">
+                @MotorService.ErrorMessage
+            </MudAlert>
+        }
+    </MudPaper>
+
+    <!-- STATUS DISPLAY -->
+    <MudPaper Elevation="3" Class="pa-4 mb-4">
+        <MudText Typo="Typo.h5" Class="mb-3">
+            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="mr-2" />
+            Motor Status
+        </MudText>
+
+        <MudGrid>
+            <MudItem xs="6" sm="3">
+                <MudPaper Elevation="0" Class="pa-3 text-center" Style="background: rgba(33, 150, 243, 0.1);">
+                    <MudIcon Icon="@Icons.Material.Filled.Thermostat" Size="Size.Large" Color="Color.Info" />
+                    <MudText Typo="Typo.h4">@MotorService.Temperature°C</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Info">Temperature</MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="6" sm="3">
+                <MudPaper Elevation="0" Class="pa-3 text-center" Style="background: rgba(76, 175, 80, 0.1);">
+                    <MudIcon Icon="@Icons.Material.Filled.ElectricBolt" Size="Size.Large" Color="Color.Success" />
+                    <MudText Typo="Typo.h4">@MotorService.TorqueCurrent.ToString("F2") A</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Success">Current</MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="6" sm="3">
+                <MudPaper Elevation="0" Class="pa-3 text-center" Style="background: rgba(255, 152, 0, 0.1);">
+                    <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Large" Color="Color.Warning" />
+                    <MudText Typo="Typo.h4">@MotorService.Speed dps</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Warning">Speed</MudText>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="6" sm="3">
+                <MudPaper Elevation="0" Class="pa-3 text-center" Style="background: rgba(156, 39, 176, 0.1);">
+                    <MudIcon Icon="@Icons.Material.Filled.RotateRight" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h4">@MotorService.Angle°</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Angle</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- CONTROL PANELS -->
+    <MudGrid>
+        <!-- TORQUE CONTROL -->
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="3" Class="pa-4" Style="height: 100%;">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Memory" Class="mr-2" Color="Color.Success" />
+                    Torque Control
+                </MudText>
+
+                <MudNumericField @bind-Value="MotorService.TargetTorque"
+                                 Label="Target Torque (A)"
+                                 Variant="Variant.Outlined"
+                                 Min="-10" Max="10" Step="1"
+                                 Format="F2"
+                                 Adornment="Adornment.End"
+                                 AdornmentText="A"
+                                 Class="mb-3"
+                                 T="float" />
+
+                <MudSlider @bind-Value="MotorService.TargetTorque"
+                           Min="-10" Max="10" Step="1"
+                           Color="Color.Success"
+                           Class="mb-3"
+                           T="float">
+                    Torque: @MotorService.TargetTorque.ToString("F2") A
+                </MudSlider>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.Send"
+                           OnClick="@(() => MotorService.SendTorqueCommand())"
+                           Disabled="!MotorService.IsConnected"
+                           FullWidth="true">
+                    Send Torque
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+
+        <!-- VELOCITY CONTROL -->
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="3" Class="pa-4" Style="height: 100%;">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Speed" Class="mr-2" Color="Color.Warning" />
+                    Velocity Control
+                </MudText>
+
+                <MudNumericField @bind-Value="MotorService.TargetSpeed"
+                                 Label="Target Speed (dps)"
+                                 Variant="Variant.Outlined"
+                                 Min="-1000" Max="1000" Step="10"
+                                 Adornment="Adornment.End"
+                                 AdornmentText="dps"
+                                 Class="mb-3"
+                                 T="int" />
+
+                <MudSlider @bind-Value="MotorService.TargetSpeed"
+                           Min="-1000" Max="1000" Step="10"
+                           Color="Color.Warning"
+                           Class="mb-3"
+                           T="int">
+                    Speed: @MotorService.TargetSpeed dps
+                </MudSlider>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Warning"
+                           StartIcon="@Icons.Material.Filled.Send"
+                           OnClick="@(() => MotorService.SendVelocityCommand())"
+                           Disabled="!MotorService.IsConnected"
+                           FullWidth="true">
+                    Send Velocity
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+
+        <!-- POSITION CONTROL -->
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="3" Class="pa-4" Style="height: 100%;">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.RotateRight" Class="mr-2" Color="Color.Secondary" />
+                    Position Control
+                </MudText>
+
+                <MudNumericField @bind-Value="MotorService.TargetAngle"
+                                 Label="Target Angle (degrees)"
+                                 Variant="Variant.Outlined"
+                                 Min="-360" Max="360" Step="1"
+                                 Adornment="Adornment.End"
+                                 AdornmentText="°"
+                                 Class="mb-2"
+                                 T="float" />
+
+                <MudNumericField @bind-Value="MotorService.MaxSpeed"
+                                 Label="Max Speed (dps)"
+                                 Variant="Variant.Outlined"
+                                 Min="10" Max="1000" Step="10"
+                                 Adornment="Adornment.End"
+                                 AdornmentText="dps"
+                                 Class="mb-3"
+                                 T="ushort" />
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Send"
+                           OnClick="@(() => MotorService.SendPositionCommand())"
+                           Disabled="!MotorService.IsConnected"
+                           FullWidth="true">
+                    Send Position
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- EMERGENCY CONTROLS -->
+    <MudPaper Elevation="3" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" Color="Color.Error" />
+            Emergency Controls
+        </MudText>
+
+        <MudGrid>
+            <MudItem xs="12" sm="4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Warning"
+                           StartIcon="@Icons.Material.Filled.Stop"
+                           OnClick="@(() => MotorService.StopMotor())"
+                           Disabled="!MotorService.IsConnected"
+                           FullWidth="true"
+                           Size="Size.Large">
+                    Stop Motor
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.PowerSettingsNew"
+                           OnClick="@(() => MotorService.ShutdownMotor())"
+                           Disabled="!MotorService.IsConnected"
+                           FullWidth="true"
+                           Size="Size.Large">
+                    Shutdown Motor
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Info"
+                           StartIcon="@Icons.Material.Filled.RestartAlt"
+                           OnClick="@(() => MotorService.ResetMotor())"
+                           Disabled="!MotorService.IsConnected"
+                           FullWidth="true"
+                           Size="Size.Large">
+                    Reset System
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- LOG PANEL -->
+    <MudPaper Elevation="3" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" Class="mb-3">
+            <MudIcon Icon="@Icons.Material.Filled.Terminal" Class="mr-2" />
+            Activity Log
+        </MudText>
+
+        <MudPaper Elevation="0" Class="pa-3" Style="background: #1e1e1e; max-height: 300px; overflow-y: auto; font-family: 'Courier New', monospace;">
+            @foreach (var log in MotorService.Logs.TakeLast(20).Reverse())
+            {
+                <MudText Typo="Typo.body2" Style="color: #dcdcdc; margin: 2px 0;">@log</MudText>
+            }
+        </MudPaper>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string _canInterface = "can0";
+    private byte _motorId = 1;
+
+    protected override void OnInitialized()
+    {
+        MotorService.OnStateChanged += StateHasChanged;
+    }
+
+    private async Task Connect()
+    {
+        await MotorService.ConnectAsync(_canInterface, _motorId);
+    }
+
+    private void Disconnect()
+    {
+        MotorService.Disconnect();
+    }
+
+    private Severity GetConnectionSeverity()
+    {
+        if (MotorService.IsConnected)
+            return Severity.Success;
+        else if (MotorService.ConnectionStatus.Contains("Failed") || MotorService.ConnectionStatus.Contains("Error"))
+            return Severity.Error;
+        else
+            return Severity.Info;
+    }
+
+    public void Dispose()
+    {
+        MotorService.OnStateChanged -= StateHasChanged;
+    }
+}

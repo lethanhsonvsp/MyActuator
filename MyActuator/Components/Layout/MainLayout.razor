@@ -1,0 +1,51 @@
+@inherits LayoutComponentBase
+<MudThemeProvider IsDarkMode="true" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout Class="dark-root">
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Width="300px">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h4">MyActuator</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu Dense="true">
+            @foreach (var n in _navs)
+            {
+                <MudNavLink Href="@n.Path"
+                            Match="@n.Match"
+                            Icon="@n.Icon">
+                    <MudText Typo="Typo.h5">@n.Label</MudText>
+                </MudNavLink>
+            }
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent Class="mud-height-full dark-main">
+        @Body
+    </MudMainContent>
+</MudLayout>
+@code {
+    private bool _drawerOpen = true;
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+    record Nav(string Icon, string Path, string Label, NavLinkMatch Match = NavLinkMatch.Prefix);
+    Nav[] _navs =
+    {
+        new(Icons.Material.Filled.Dashboard, "/", "Dashboard", NavLinkMatch.All),
+        new(Icons.Material.Filled.Countertops, "/counter", "Counter")
+    };
+}
+<style>
+    html, body, #app { height: 100%; margin: 0; background-color: var(--mud-palette-background); }
+    .dark-root { min-height: 100vh; background-color: var(--mud-palette-background); }
+    .dark-main { min-height: 100vh; background-color: var(--mud-palette-background); padding: 1px; }
+    .mud-container { background-color: transparent !important; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: #1a1a1a; }
+    .mud-nav-link, .mud-nav-link:visited, .mud-nav-link:hover, .mud-nav-link:active { text-decoration: none !important; }
+    .mud-nav-link, .mud-nav-link:visited { color: var(--mud-palette-text-secondary) !important; }
+    .mud-nav-link.mud-nav-link-active, .mud-nav-link.mud-nav-link-active:visited,
+    .mud-nav-link.mud-nav-link-active .mud-typography,
+    .mud-nav-link.mud-nav-link-active .mud-icon-root { color: #ffffff !important; }
+</style>
