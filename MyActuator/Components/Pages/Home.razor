@@ -13,7 +13,7 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
 
     <!-- CONNECTION PANEL -->
-    <MudPaper Elevation="3" Class="pa-4 mb-4">
+    <MudPaper Elevation="3" Class="pa-2 mb-2">
         <MudGrid>
             <MudItem xs="12" sm="4">
                 <MudTextField @bind-Value="_canInterface"
@@ -68,7 +68,7 @@
     </MudPaper>
 
     <!-- STATUS DISPLAY -->
-    <MudPaper Elevation="3" Class="pa-4 mb-4">
+    <MudPaper Elevation="3" Class="pa-2 mb-2">
         <MudText Typo="Typo.h5" Class="mb-3">
             <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="mr-2" />
             Motor Status
@@ -110,277 +110,256 @@
     </MudPaper>
 
     <!-- CONTROL PANELS -->
+    <MudPaper Elevation="3" Class="pa-2 mb-2">
+
+        <MudGrid>
+
+            <!-- TORQUE CONTROL -->
+            <MudItem xs="12" md="3">
+                <MudPaper Elevation="0"
+                          Class="pa-4 control-panel"
+                          Style="height:100%;">
+
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Memory"
+                                 Class="mr-2"
+                                 Color="Color.Success" />
+                        Torque
+                    </MudText>
+
+                    <MudNumericField @bind-Value="MotorService.TargetTorque"
+                                     Label="Torque (A)"
+                                     Variant="Variant.Outlined"
+                                     Min="-10" Max="10"
+                                     Format="F2"
+                                     T="float"
+                                     FullWidth
+                                     Class="mb-3" />
+
+                    <MudSlider @bind-Value="MotorService.TargetTorque"
+                               Min="-10" Max="10"
+                               Color="Color.Success"
+                               T="float"
+                               Class="mb-3" />
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               OnClick="MotorService.SendTorqueCommandAsync"
+                               Disabled="!MotorService.IsConnected"
+                               FullWidth>
+                        Send
+                    </MudButton>
+
+                </MudPaper>
+            </MudItem>
+
+            <!-- VELOCITY CONTROL -->
+            <MudItem xs="12" md="3">
+                <MudPaper Elevation="0"
+                          Class="pa-4 control-panel"
+                          Style="height:100%;">
+
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Speed"
+                                 Class="mr-2"
+                                 Color="Color.Warning" />
+                        Velocity
+                    </MudText>
+
+                    <MudNumericField @bind-Value="MotorService.TargetSpeed"
+                                     Label="Speed (dps)"
+                                     Variant="Variant.Outlined"
+                                     Min="-1000" Max="1000"
+                                     T="int"
+                                     FullWidth
+                                     Class="mb-3" />
+
+                    <MudSlider @bind-Value="MotorService.TargetSpeed"
+                               Min="-1000" Max="1000"
+                               Color="Color.Warning"
+                               T="int"
+                               Class="mb-3" />
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Warning"
+                               OnClick="MotorService.SendVelocityCommandAsync"
+                               Disabled="!MotorService.IsConnected"
+                               FullWidth>
+                        Send
+                    </MudButton>
+
+                </MudPaper>
+            </MudItem>
+            <!-- POSITION CONTROL -->
+            <MudItem xs="12" md="3">
+                <MudPaper Elevation="0"
+                          Class="pa-4 control-panel"
+                          Style="height:100%;">
+
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.RotateRight"
+                                 Class="mr-2"
+                                 Color="Color.Secondary" />
+                        Position
+                    </MudText>
+
+                    <MudNumericField @bind-Value="MotorService.TargetAngle"
+                                     Label="Angle (°)"
+                                     Variant="Variant.Outlined"
+                                     Min="-360" Max="360"
+                                     T="float"
+                                     FullWidth
+                                     Class="mb-2" />
+
+                    <MudNumericField @bind-Value="MotorService.MaxSpeed"
+                                     Label="Max Speed (dps)"
+                                     Variant="Variant.Outlined"
+                                     Min="10" Max="1000"
+                                     T="ushort"
+                                     FullWidth
+                                     Class="mb-3" />
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               OnClick="MotorService.SendPositionCommandAsync"
+                               Disabled="!MotorService.IsConnected"
+                               FullWidth>
+                        Send
+                    </MudButton>
+
+                </MudPaper>
+            </MudItem>
+            <!-- ACC / DEC CONTROL -->
+            <MudItem xs="12" md="3">
+                <MudPaper Elevation="0"
+                          Class="pa-4 control-panel"
+                          Style="height:100%;">
+
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp"
+                                 Class="mr-2"
+                                 Color="Color.Info" />
+                        Acc / Dec
+                    </MudText>
+
+                    <MudNumericField @bind-Value="MotorService.PositionAcc"
+                                     Label="Acc (dps/s)"
+                                     Variant="Variant.Outlined"
+                                     Min="100" Max="60000"
+                                     T="uint"
+                                     FullWidth
+                                     Class="mb-2" />
+
+                    <MudNumericField @bind-Value="MotorService.PositionDec"
+                                     Label="Dec (dps/s)"
+                                     Variant="Variant.Outlined"
+                                     Min="100" Max="60000"
+                                     T="uint"
+                                     FullWidth
+                                     Class="mb-3" />
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Info"
+                               OnClick="MotorService.ApplyPositionAccDecAsync"
+                               Disabled="!MotorService.IsConnected"
+                               FullWidth>
+                        Apply
+                    </MudButton>
+
+                </MudPaper>
+            </MudItem>
+
+        </MudGrid>
+
+    </MudPaper>
+
+    <!-- ================= AUTO + EMERGENCY | LOG ================= -->
     <MudGrid>
-        <MudItem xs="12">
-            <MudPaper Elevation="3" Class="pa-4 mt-4">
-                <MudText Typo="Typo.h6">
-                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Class="mr-2" />
-                    Acceleration / Deceleration
-                </MudText>
 
-                <MudGrid Class="mt-2">
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="MotorService.PositionAcc"
-                                         Label="Position Acc (dps/s)"
-                                         Min="100" Max="60000"
-                                         Variant="Variant.Outlined"
-                                         T="uint"
-                                         FullWidth="true" />
+        <!-- LEFT -->
+        <MudItem xs="12" md="6" Style="max-height:38vh; overflow:hidden">
+
+            <MudPaper Class="pa-3 mb-2" Elevation="3">
+                <MudText Typo="Typo.subtitle1">Auto Loop</MudText>
+
+                <MudGrid>
+                    <MudItem xs="4">
+                        <MudNumericField @bind-Value="MotorService.AutoAngle" Label="±deg" T="float" FullWidth />
                     </MudItem>
-
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="MotorService.PositionDec"
-                                         Label="Position Dec (dps/s)"
-                                         Min="100" Max="60000"
-                                         Variant="Variant.Outlined"
-                                         T="uint"
-                                         FullWidth="true" />
+                    <MudItem xs="4">
+                        <MudNumericField @bind-Value="MotorService.AutoLoops" Label="Loops" T="int" FullWidth />
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudNumericField @bind-Value="MotorService.AutoDelayMs" Label="Delay ms" T="int" FullWidth />
                     </MudItem>
                 </MudGrid>
 
-                <MudButton Color="Color.Primary"
-                           Variant="Variant.Filled"
-                           Class="mt-3"
-                           StartIcon="@Icons.Material.Filled.Save"
-                           OnClick="@MotorService.ApplyPositionAccDecAsync"
-                           Disabled="!MotorService.IsConnected">
-                    Apply Acc / Dec
-                </MudButton>
+                <MudGrid Class="mt-2">
+                    <MudItem xs="6">
+                        <MudButton FullWidth Color="Color.Info"
+                                   OnClick="MotorService.StartAutoLoopAsync"
+                                   Disabled="!MotorService.IsConnected || MotorService.IsAutoRunning">
+                            Start
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudButton FullWidth Color="Color.Error"
+                                   OnClick="MotorService.StopAutoLoopAsync"
+                                   Disabled="!MotorService.IsAutoRunning">
+                            Stop
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
             </MudPaper>
-        </MudItem>
-        <!-- TORQUE CONTROL -->
-        <MudItem xs="12" md="4">
-            <MudPaper Elevation="3" Class="pa-4" Style="height: 100%;">
-                <MudText Typo="Typo.h6" Class="mb-3">
-                    <MudIcon Icon="@Icons.Material.Filled.Memory" Class="mr-2" Color="Color.Success" />
-                    Torque Control
-                </MudText>
 
-                <MudNumericField @bind-Value="MotorService.TargetTorque"
-                                 Label="Target Torque (A)"
-                                 Variant="Variant.Outlined"
-                                 Min="-10" Max="10" Step="1"
-                                 Format="F2"
-                                 Adornment="Adornment.End"
-                                 AdornmentText="A"
-                                 Class="mb-3"
-                                 T="float" />
+            <MudPaper Class="pa-3" Elevation="3">
+                <MudText Typo="Typo.subtitle1">Emergency</MudText>
 
-                <MudSlider @bind-Value="MotorService.TargetTorque"
-                           Min="-10" Max="10" Step="1"
-                           Color="Color.Success"
-                           Class="mb-3"
-                           T="float">
-                    Torque: @MotorService.TargetTorque.ToString("F2") A
-                </MudSlider>
-
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Success"
-                           StartIcon="@Icons.Material.Filled.Send"
-                           OnClick="@(() => MotorService.SendTorqueCommandAsync())"
-                           Disabled="!MotorService.IsConnected"
-                           FullWidth="true">
-                    Send Torque
-                </MudButton>
+                <MudGrid>
+                    <MudItem xs="4">
+                        <MudButton FullWidth Color="Color.Warning"
+                                   OnClick="MotorService.StopMotorAsync">
+                            Stop
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudButton FullWidth Color="Color.Error"
+                                   OnClick="MotorService.ShutdownMotorAsync">
+                            Shutdown
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudButton FullWidth Color="Color.Info"
+                                   OnClick="MotorService.ResetMotorAsync">
+                            Reset
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
             </MudPaper>
+
         </MudItem>
 
-        <!-- VELOCITY CONTROL -->
-        <MudItem xs="12" md="4">
-            <MudPaper Elevation="3" Class="pa-4" Style="height: 100%;">
-                <MudText Typo="Typo.h6" Class="mb-3">
-                    <MudIcon Icon="@Icons.Material.Filled.Speed" Class="mr-2" Color="Color.Warning" />
-                    Velocity Control
-                </MudText>
+        <!-- RIGHT LOG -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-3" Elevation="3">
+                <MudText Typo="Typo.subtitle1">Activity Log</MudText>
 
-                <MudNumericField @bind-Value="MotorService.TargetSpeed"
-                                 Label="Target Speed (dps)"
-                                 Variant="Variant.Outlined"
-                                 Min="-1000" Max="1000" Step="10"
-                                 Adornment="Adornment.End"
-                                 AdornmentText="dps"
-                                 Class="mb-3"
-                                 T="int" />
-
-                <MudSlider @bind-Value="MotorService.TargetSpeed"
-                           Min="-1000" Max="1000" Step="10"
-                           Color="Color.Warning"
-                           Class="mb-3"
-                           T="int">
-                    Speed: @MotorService.TargetSpeed dps
-                </MudSlider>
-
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Warning"
-                           StartIcon="@Icons.Material.Filled.Send"
-                           OnClick="@(() => MotorService.SendVelocityCommandAsync())"
-                           Disabled="!MotorService.IsConnected"
-                           FullWidth="true">
-                    Send Velocity
-                </MudButton>
+                <MudPaper Class="pa-2"
+                          Style="background:#1e1e1e;
+                                 height:calc(100vh - 735px);
+                                 min-height:120px;
+                                 overflow:auto;
+                                 font-family:monospace;">
+                    @foreach (var log in MotorService.Logs.TakeLast(50).Reverse())
+                    {
+                        <div style="color:#dcdcdc">@log</div>
+                    }
+                </MudPaper>
             </MudPaper>
         </MudItem>
 
-        <!-- POSITION CONTROL -->
-        <MudItem xs="12" md="4">
-            <MudPaper Elevation="3" Class="pa-4" Style="height: 100%;">
-                <MudText Typo="Typo.h6" Class="mb-3">
-                    <MudIcon Icon="@Icons.Material.Filled.RotateRight" Class="mr-2" Color="Color.Secondary" />
-                    Position Control
-                </MudText>
-
-                <MudNumericField @bind-Value="MotorService.TargetAngle"
-                                 Label="Target Angle (degrees)"
-                                 Variant="Variant.Outlined"
-                                 Min="-360" Max="360" Step="1"
-                                 Adornment="Adornment.End"
-                                 AdornmentText="°"
-                                 Class="mb-2"
-                                 T="float" />
-
-                <MudNumericField @bind-Value="MotorService.MaxSpeed"
-                                 Label="Max Speed (dps)"
-                                 Variant="Variant.Outlined"
-                                 Min="10" Max="1000" Step="10"
-                                 Adornment="Adornment.End"
-                                 AdornmentText="dps"
-                                 Class="mb-3"
-                                 T="ushort" />
-
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Secondary"
-                           StartIcon="@Icons.Material.Filled.Send"
-                           OnClick="@(() => MotorService.SendPositionCommandAsync())"
-                           Disabled="!MotorService.IsConnected"
-                           FullWidth="true">
-                    Send Position
-                </MudButton>
-            </MudPaper>
-        </MudItem>
     </MudGrid>
-    <!-- AUTO LOOP CONTROL -->
-    <MudPaper Elevation="3" Class="pa-4 mt-4">
-        <MudText Typo="Typo.h6" Class="mb-3">
-            <MudIcon Icon="@Icons.Material.Filled.Loop" Class="mr-2" Color="Color.Info" />
-            Auto Position Loop
-        </MudText>
 
-        <MudGrid>
-            <MudItem xs="12" sm="4">
-                <MudNumericField @bind-Value="MotorService.AutoAngle"
-                                 Label="Angle ±X (deg)"
-                                 Min="1" Max="360"
-                                 Variant="Variant.Outlined"
-                                 T="float" />
-            </MudItem>
-
-            <MudItem xs="12" sm="4">
-                <MudNumericField @bind-Value="MotorService.AutoLoops"
-                                 Label="Loops (N)"
-                                 Min="1" Max="100"
-                                 Variant="Variant.Outlined"
-                                 T="int" />
-            </MudItem>
-
-            <MudItem xs="12" sm="4">
-                <MudNumericField @bind-Value="MotorService.AutoDelayMs"
-                                 Label="Delay (ms)"
-                                 Min="100" Max="5000"
-                                 Variant="Variant.Outlined"
-                                 T="int" />
-            </MudItem>
-        </MudGrid>
-
-        <MudGrid Class="mt-3">
-            <MudItem xs="6">
-                <MudButton Color="Color.Info"
-                           Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.PlayArrow"
-                           OnClick="@MotorService.StartAutoLoopAsync"
-                           Disabled="!MotorService.IsConnected || MotorService.IsAutoRunning"
-                           FullWidth="true">
-                    Start Auto Loop
-                </MudButton>
-            </MudItem>
-
-            <MudItem xs="6">
-                <MudButton Color="Color.Error"
-                           Variant="Variant.Filled"
-                           StartIcon="@Icons.Material.Filled.Stop"
-                           OnClick="@MotorService.StopAutoLoopAsync"
-                           Disabled="!MotorService.IsAutoRunning"
-                           FullWidth="true">
-                    Stop Auto Loop
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-
-        @if (MotorService.IsAutoRunning)
-        {
-            <MudAlert Severity="Severity.Info" Class="mt-3" Dense="true">
-                Auto loop is running…
-            </MudAlert>
-        }
-    </MudPaper>
-
-    <!-- EMERGENCY CONTROLS -->
-    <MudPaper Elevation="3" Class="pa-4 mt-4">
-        <MudText Typo="Typo.h6" Class="mb-3">
-            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" Color="Color.Error" />
-            Emergency Controls
-        </MudText>
-
-        <MudGrid>
-            <MudItem xs="12" sm="4">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Warning"
-                           StartIcon="@Icons.Material.Filled.Stop"
-                           OnClick="@(() => MotorService.StopMotorAsync())"
-                           Disabled="!MotorService.IsConnected"
-                           FullWidth="true"
-                           Size="Size.Large">
-                    Stop Motor
-                </MudButton>
-            </MudItem>
-            <MudItem xs="12" sm="4">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Error"
-                           StartIcon="@Icons.Material.Filled.PowerSettingsNew"
-                           OnClick="@(() => MotorService.ShutdownMotorAsync())"
-                           Disabled="!MotorService.IsConnected"
-                           FullWidth="true"
-                           Size="Size.Large">
-                    Shutdown Motor
-                </MudButton>
-            </MudItem>
-            <MudItem xs="12" sm="4">
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Info"
-                           StartIcon="@Icons.Material.Filled.RestartAlt"
-                           OnClick="@(() => MotorService.ResetMotorAsync())"
-                           Disabled="!MotorService.IsConnected"
-                           FullWidth="true"
-                           Size="Size.Large">
-                    Reset System
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-
-    <!-- LOG PANEL -->
-    <MudPaper Elevation="3" Class="pa-4 mt-4">
-        <MudText Typo="Typo.h6" Class="mb-3">
-            <MudIcon Icon="@Icons.Material.Filled.Terminal" Class="mr-2" />
-            Activity Log
-        </MudText>
-
-        <MudPaper Elevation="0" Class="pa-3" Style="background: #1e1e1e; max-height: 300px; overflow-y: auto; font-family: 'Courier New', monospace;">
-            @foreach (var log in MotorService.Logs.TakeLast(20).Reverse())
-            {
-                <MudText Typo="Typo.body2" Style="color: #dcdcdc; margin: 2px 0;">@log</MudText>
-            }
-        </MudPaper>
-    </MudPaper>
 </MudContainer>
 
 @code {
@@ -422,3 +401,13 @@
         MotorService.OnStateChanged -= OnMotorServiceStateChanged;
     }
 }
+
+<style>
+
+    .control-panel {
+        background: transparent !important;
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px;
+    }
+
+</style>
